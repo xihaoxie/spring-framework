@@ -74,12 +74,15 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	private static final int SUPPRESSED_EXCEPTIONS_LIMIT = 100;
 
 
+	/** 一级缓存：单例对象缓存：bean 名称到 bean 实例。存放的是可用的 Bean。 */
 	/** Cache of singleton objects: bean name to bean instance. */
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 
+	/** 三级缓存：单例工厂缓存：Bean 名称到 ObjectFactory。用于创建半成品的 Bean，并放入二级缓存中。 */
 	/** Cache of singleton factories: bean name to ObjectFactory. */
 	private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
 
+	/** 二级缓存：早期单例对象的缓存：bean 名称到 bean 实例。存放的是半成品的 Bean（调用完构造方法，但是没有注入属性和初始化）。 */
 	/** Cache of early singleton objects: bean name to bean instance. */
 	private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(16);
 
@@ -144,13 +147,15 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 
 	/**
-	 * Add the given singleton factory for building the specified singleton
-	 * if necessary.
-	 * <p>To be called for eager registration of singletons, e.g. to be able to
-	 * resolve circular references.
+	 * 如有必要，添加给定的单例工厂以构建指定的单例。要求立即注册单例，例如能够解析循环引用。
+	 *
+	 * Add the given singleton factory for building the specified singleton if necessary.
+	 * <p>To be called for eager registration of singletons, e.g. to be able to resolve circular references.
+	 *
 	 * @param beanName the name of the bean
 	 * @param singletonFactory the factory for the singleton object
-	 */
+	 * @date 2021-09-11 12:11
+	 **/
 	protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(singletonFactory, "Singleton factory must not be null");
 		synchronized (this.singletonObjects) {
@@ -179,20 +184,33 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	@Nullable
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 		// Quick check for existing instance without full singleton lock
+		// 先从一级缓存里面获取 Bean。
 		Object singletonObject = this.singletonObjects.get(beanName);
+		// 判断这个 Bean 是否已经创建完成，或者正在创建中。
 		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+			// 从二级缓存中获取 Bean。
 			singletonObject = this.earlySingletonObjects.get(beanName);
+			// 如果为空的时候，允许使用半成品的 Bean
 			if (singletonObject == null && allowEarlyReference) {
+				// 锁住一级缓存
 				synchronized (this.singletonObjects) {
 					// Consistent creation of early reference within full singleton lock
+					// 再次判断一级缓存中是否有创建好的 Bean。
 					singletonObject = this.singletonObjects.get(beanName);
 					if (singletonObject == null) {
+						// 再次判断二级缓存中是否有创建好的半成品 Bean。
 						singletonObject = this.earlySingletonObjects.get(beanName);
 						if (singletonObject == null) {
+							// 调用三级缓存，获取创建半成品 Bean 的根接口（创建工厂）。
 							ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+							// 如果获取到了
 							if (singletonFactory != null) {
+								// org.springframework.beans.factory.support
+								// .AbstractAutowireCapableBeanFactory#doCreateBean() 时已经将
 								singletonObject = singletonFactory.getObject();
+								// 存入二级缓存
 								this.earlySingletonObjects.put(beanName, singletonObject);
+								// 从三级缓存中移除
 								this.singletonFactories.remove(beanName);
 							}
 						}
@@ -336,10 +354,14 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 
 	/**
+	 * 返回指定的单例 bean 当前是否正在创建中（在整个工厂内）。
+	 *
 	 * Return whether the specified singleton bean is currently in creation
 	 * (within the entire factory).
-	 * @param beanName the name of the bean
-	 */
+	 *
+	 * @param beanName 需要查找的 Bean Name
+	 * @return boolean the name of the bean
+	 **/
 	public boolean isSingletonCurrentlyInCreation(String beanName) {
 		return this.singletonsCurrentlyInCreation.contains(beanName);
 	}
