@@ -1203,19 +1203,30 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Candidate constructors for autowiring?
+		// 从 Bean后置处理中为自动装配寻找构造方法，有且仅有一个有参构造方法或者有且仅有@Autowired注解构造
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
+
+		/*
+		 * 以下情况符合其一即可进入
+		 * 1.存在可选构造方法、
+		 * 2.自动装配模型为构造函数自动装配
+		 * 3.给 BeanDefinition 设置参数构造值
+		 * 4.有参与构造函数列表的参数
+		 */
 		if (ctors != null || mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR ||
 				mbd.hasConstructorArgumentValues() || !ObjectUtils.isEmpty(args)) {
 			return autowireConstructor(beanName, mbd, ctors, args);
 		}
 
 		// Preferred constructors for default construction?
+		// 默认构造的首选构造函数
 		ctors = mbd.getPreferredConstructors();
 		if (ctors != null) {
 			return autowireConstructor(beanName, mbd, ctors, null);
 		}
 
 		// No special handling: simply use no-arg constructor.
+		// 无特殊处理：只需使用无参数构造函数。
 		return instantiateBean(beanName, mbd);
 	}
 
