@@ -327,6 +327,7 @@ class BeanDefinitionValueResolver {
 				}
 				else {
 					resolvedName = String.valueOf(doEvaluate(ref.getBeanName()));
+					// 获取 resolvedName 的 Bean 对象
 					bean = this.beanFactory.getBean(resolvedName);
 				}
 				this.beanFactory.registerDependentBean(resolvedName, this.beanName);

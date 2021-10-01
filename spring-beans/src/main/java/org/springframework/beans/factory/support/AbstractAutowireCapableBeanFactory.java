@@ -369,6 +369,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 						getAccessControlContext());
 			}
 			else {
+				// 反射注入 Bean
 				bean = getInstantiationStrategy().instantiate(bd, null, this);
 			}
 			populateBean(beanClass.getName(), bd, new BeanWrapperImpl(bean));
@@ -513,6 +514,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		try {
+			// 实际 Bean 的创建
 			Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 			if (logger.isTraceEnabled()) {
 				logger.trace("Finished creating instance of bean '" + beanName + "'");
@@ -553,6 +555,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 		if (instanceWrapper == null) {
+			// 创建 Bean 实例
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
 		Object bean = instanceWrapper.getWrappedInstance();
@@ -591,6 +594,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
+			// 重要。对 Bean 的属性进行填充。
 			populateBean(beanName, mbd, instanceWrapper);
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		}
@@ -1456,6 +1460,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		if (pvs != null) {
+			//
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
 	}
@@ -1702,8 +1707,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				deepCopy.add(pv);
 			}
 			else {
+				// 获取属性的名字
 				String propertyName = pv.getName();
+				// 获取未经类型转换的值
 				Object originalValue = pv.getValue();
+				//
 				if (originalValue == AutowiredPropertyMarker.INSTANCE) {
 					Method writeMethod = bw.getPropertyDescriptor(propertyName).getWriteMethod();
 					if (writeMethod == null) {
@@ -1711,6 +1719,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					}
 					originalValue = new DependencyDescriptor(new MethodParameter(writeMethod, 0), true);
 				}
+				// 交由valueResolver
 				Object resolvedValue = valueResolver.resolveValueIfNecessary(pv, originalValue);
 				Object convertedValue = resolvedValue;
 				boolean convertible = bw.isWritableProperty(propertyName) &&

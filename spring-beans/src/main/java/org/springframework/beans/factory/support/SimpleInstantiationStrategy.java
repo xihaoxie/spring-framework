@@ -75,6 +75,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 									(PrivilegedExceptionAction<Constructor<?>>) clazz::getDeclaredConstructor);
 						}
 						else {
+							// 反射
 							constructorToUse = clazz.getDeclaredConstructor();
 						}
 						bd.resolvedConstructorOrFactoryMethod = constructorToUse;
