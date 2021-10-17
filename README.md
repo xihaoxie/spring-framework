@@ -99,3 +99,24 @@ The Spring Framework is released under version 2.0 of the [Apache License][].
 [The Spring Blog]: http://spring.io/blog/
 [news feed]: http://spring.io/blog/category/news
 [Apache License]: http://www.apache.org/licenses/LICENSE-2.0
+
+
+## 启动报错
+
+修改gradle/wrapper/gradle-wrapper.properties中
+
+```
+distributionUrl=https\://services.gradle.org/distributions/gradle-1.12-bin.zip
+```
+为：
+
+```
+distributionUrl=https\://services.gradle.org/distributions/gradle-4.8.1-bin.zip
+```
+
+
+## 更换maven 仓库
+
+```
+maven{ url "https://repo.springsource.org/plugins-release"}
+```
